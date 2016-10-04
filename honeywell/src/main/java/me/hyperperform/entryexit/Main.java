@@ -2,8 +2,11 @@ package me.hyperperform.entryexit;
 
 import gnu.io.*;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Scanner;
 
-
+@SuppressWarnings("unchecked")
 public class Main
 {
     InputStream in = null;
@@ -40,7 +43,7 @@ public class Main
     
     void connect ( String portName ) throws Exception
     {
-    	System.out.println("Connecting to device");
+    	System.out.println("Connecting to " + portName);
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         if ( portIdentifier.isCurrentlyOwned() )
         {
@@ -48,9 +51,9 @@ public class Main
         }
         else
         {
-            CommPort commPort = portIdentifier.open(this.getClass().getName(),2000);
+            CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
             
-            System.out.println("Checking if serial port instance");
+            System.out.println("Checking if " + portName + " is a serial port instance");
             if ( commPort instanceof SerialPort )
             {
             	System.out.println("Device is serial port instance");
@@ -91,11 +94,42 @@ public class Main
     {
         try
         {
-            (new Main()).connect("COM3");
+            System.out.println("Searching for devices");
+            ArrayList<String> list = getPorts();
+
+            System.out.println(list.size() + " devices found");
+
+            if (list.size() > 0)
+            {
+                Scanner sc = new Scanner(System.in);
+
+                System.out.println("Pick CommPort from following list:");
+                for (int k = 0; k < list.size(); k++)
+                    System.out.println(k + " - " + list.get(k));
+
+                System.out.print(">>> ");
+                int selection = sc.nextInt();
+                (new Main()).connect(list.get(selection));
+            }
         }
         catch ( Exception e )
         {
             e.printStackTrace();
         }
+    }
+
+    static ArrayList<String> getPorts()
+    {
+        Enumeration<CommPortIdentifier> ports = CommPortIdentifier.getPortIdentifiers();
+        ArrayList<String> list = new ArrayList<String>();
+
+        while(ports.hasMoreElements())
+        {
+            CommPortIdentifier c = ports.nextElement();
+            if (c.getPortType() == CommPortIdentifier.PORT_SERIAL)
+                list.add(c.getName());
+        }
+
+        return list;
     }
 }
