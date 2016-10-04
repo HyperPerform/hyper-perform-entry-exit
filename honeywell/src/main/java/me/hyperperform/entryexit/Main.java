@@ -3,6 +3,7 @@ package me.hyperperform.entryexit;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -11,10 +12,6 @@ import java.io.OutputStream;
 
 public class Main
 {
-    public Main()
-    {
-        super();
-    }
     
     void connect ( String portName ) throws Exception
     {
@@ -38,7 +35,8 @@ public class Main
                 
                 InputStream in = serialPort.getInputStream();
                 OutputStream out = serialPort.getOutputStream();
-                
+
+
 
                 //---------------------------------------------------------------------------------------------
                 byte[] buffer = new byte[1024];
@@ -46,9 +44,18 @@ public class Main
 	            try
 	            {	
 	            	System.out.println("Started reading from device...");
-	                while ((len = in.read(buffer)) > -1)
-	                	if (len > 0)
-	                    	System.out.println("---" + new String(buffer) + "---");
+//	                while ((len = in.read(buffer)) > -1)
+//	                    	System.out.println(new String(buffer, 0, len));
+
+                    while(true)
+                    {
+                        if (in.available() > 1)
+                        {
+                            len = in.read(buffer);
+                            System.out.println(new String(buffer, 0, len));
+                        }
+
+                    }
 	            }
 	            catch ( IOException e )
 	            {
