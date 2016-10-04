@@ -11,6 +11,9 @@
 
     <modules>
         <module>honeywell</module>
+		<module>combosmart</module>
     </modules>
+	
+	
 
 </project>
