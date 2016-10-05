@@ -1,24 +1,73 @@
 package me.hyperperform.entryexit;
 
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
+import gnu.io.*;
 
-import java.io.FileDescriptor;
-import java.io.IOException;
+import java.io.DataOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Scanner;
 
+@SuppressWarnings("unchecked")
 public class Main
 {
-    public Main()
+    InputStream in = null;
+
+    public class DataEventListener implements SerialPortEventListener
     {
-        super();
+        DataEventListener()
+        {
+            System.out.println("Initialising data event listener");
+        }
+
+        public void serialEvent(SerialPortEvent serialPortEvent)
+        {
+            if (serialPortEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE)
+            {
+                try
+                {
+                    if (in.available() > 0)
+                    {
+                        byte[] buffer = new byte[in.available()];
+                        in.read(buffer);
+
+                        System.out.println("");
+                        System.out.println("Card scanned event at " + new Date());
+
+                        System.out.println("Sending event");
+                        URL url = new URL("http://10.0.0.10:8080/hyperperform-system-1.0-SNAPSHOT/rs/AccessEvent");
+                        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+
+                        connection.setRequestMethod("POST");
+                        connection.setRequestProperty("content-type", "application/json");
+
+                        connection.setDoOutput(true);
+                        DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+                        out.writeBytes(new String(buffer, 0, buffer.length));
+                        out.flush();
+                        out.close();
+
+                        System.out.println("Response code: " + connection.getResponseCode());
+                        System.out.println("Response message: " + connection.getResponseMessage());
+                    }
+                }
+
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
+
     
     void connect ( String portName ) throws Exception
     {
-    	System.out.println("Connecting...");
+    	System.out.println("Connecting to " + portName);
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         if ( portIdentifier.isCurrentlyOwned() )
         {
@@ -26,38 +75,39 @@ public class Main
         }
         else
         {
-            CommPort commPort = portIdentifier.open(this.getClass().getName(),2000);
+            CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
             
-            System.out.println("Checking if serial port instance...");
+            System.out.println("Checking if " + portName + " is a serial port instance");
             if ( commPort instanceof SerialPort )
             {
-            	System.out.println("Is serial port...");
+            	System.out.println("Device is serial port instance");
 
                 SerialPort serialPort = (SerialPort) commPort;
                 serialPort.setSerialPortParams(57600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
                 
-                InputStream in = serialPort.getInputStream();
-                OutputStream out = serialPort.getOutputStream();
-                
+                in = serialPort.getInputStream();
 
                 //---------------------------------------------------------------------------------------------
-                byte[] buffer = new byte[1024];
-	            int len = -1;
-	            try
-	            {	
-	            	System.out.println("Started reading from device...");
-	                while ((len = in.read(buffer)) > -1)
-	                	if (len > 0)
-	                    	System.out.println("---" + new String(buffer) + "---");
-	            }
-	            catch ( IOException e )
-	            {
-	                e.printStackTrace();
-	           		System.out.println("Ended reading by exception...");
-	            }            
+
+                serialPort.addEventListener(new DataEventListener());
+                serialPort.notifyOnDataAvailable(true);
+
+//	                while ((len = in.read(buffer)) > -1)
+//	                    	System.out.println(new String(buffer, 0, len));
+
+//                    while(true)
+//                    {
+//                        if (in.available() > 1)
+//                        {
+//                            len = in.read(buffer);
+//                            System.out.println(new String(buffer, 0, len));
+//                        }
+//
+//                    }
+
+                System.out.println("Initialisation complete");
+
                 //---------------------------------------------------------------------------------------------
-
-
             }
             else
             {
@@ -70,11 +120,42 @@ public class Main
     {
         try
         {
-            (new Main()).connect("COM3");
+            System.out.println("Searching for devices");
+            ArrayList<String> list = getPorts();
+
+            System.out.println(list.size() + " devices found");
+
+            if (list.size() > 0)
+            {
+                Scanner sc = new Scanner(System.in);
+
+                System.out.println("Pick CommPort from following list:");
+                for (int k = 0; k < list.size(); k++)
+                    System.out.println(k + " - " + list.get(k));
+
+                System.out.print(">>> ");
+                int selection = sc.nextInt();
+                (new Main()).connect(list.get(selection));
+            }
         }
         catch ( Exception e )
         {
             e.printStackTrace();
         }
+    }
+
+    static ArrayList<String> getPorts()
+    {
+        Enumeration<CommPortIdentifier> ports = CommPortIdentifier.getPortIdentifiers();
+        ArrayList<String> list = new ArrayList<String>();
+
+        while(ports.hasMoreElements())
+        {
+            CommPortIdentifier c = ports.nextElement();
+            if (c.getPortType() == CommPortIdentifier.PORT_SERIAL)
+                list.add(c.getName());
+        }
+
+        return list;
     }
 }
