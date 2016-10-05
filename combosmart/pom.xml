@@ -7,21 +7,113 @@
     <groupId>me.HyperPerform</groupId>
     <artifactId>combosmart-system</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <dependencies>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>jna</artifactId>
+            <scope>system</scope>
+            <version>3.4.1</version>
+            <systemPath>${basedir}\lib\jna-3.4.1.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.jna</groupId>
+            <artifactId>platform</artifactId>
+            <scope>system</scope>
+            <version>1.0</version>
+            <systemPath>${basedir}\lib\platform.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>PrIns</groupId>
+            <artifactId>PrIns</artifactId>
+            <scope>system</scope>
+            <version>1.0.0</version>
+            <systemPath>${basedir}\lib\PrIns.jar</systemPath>
+
+        </dependency>
+        <dependency>
+            <groupId>Pr</groupId>
+            <artifactId>Pr</artifactId>
+            <scope>system</scope>
+            <version>1.0</version>
+            <systemPath>${basedir}\lib\Pr.jar</systemPath>
+        </dependency>
+
 
     </dependencies>
 
     <build>
         <plugins>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <!--<classpathPrefix>lib/</classpathPrefix>-->
+                            <mainClass>me.hyperperform.entryexit.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.2.1</version>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
                 <configuration>
+                        <executable>java</executable>
+                        <arguments>
+                            <argument>-Dfile.encoding=ISO-8859-1</argument>
+                            <argument>-classpath</argument>
+                        </arguments>
                     <mainClass>me.hyperperform.entryexit.Main</mainClass>
-                </configuration>
+                    </configuration>
             </plugin>
+
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-compiler-plugin</artifactId>-->
+                <!--<configuration>-->
+                    <!--<source>1.6</source>-->
+                    <!--<target>1.6</target>-->
+                    <!--<encoding>ISO-8859-1</encoding>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 
