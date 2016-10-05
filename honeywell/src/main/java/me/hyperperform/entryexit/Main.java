@@ -1,7 +1,6 @@
 package me.hyperperform.entryexit;
 
 import gnu.io.*;
-
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -39,7 +38,7 @@ public class Main
                         System.out.println("Card scanned event at " + new Date());
 
                         System.out.println("Sending event");
-                        URL url = new URL("http://10.0.0.10:8080/hyperperform-system-1.0-SNAPSHOT/rs/AccessEvent");
+                        URL url = new URL("http://localhost:8080/hyperperform-system-1.0-SNAPSHOT/rs/AccessEvent");
                         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
                         connection.setRequestMethod("POST");
