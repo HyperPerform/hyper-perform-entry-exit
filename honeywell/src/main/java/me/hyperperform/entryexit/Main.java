@@ -1,8 +1,14 @@
 package me.hyperperform.entryexit;
 
 import gnu.io.*;
+
+import java.io.DataOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Scanner;
 
@@ -28,7 +34,25 @@ public class Main
                     {
                         byte[] buffer = new byte[in.available()];
                         in.read(buffer);
-                        System.out.println(new String(buffer, 0, buffer.length));
+
+                        System.out.println("");
+                        System.out.println("Card scanned event at " + new Date());
+
+                        System.out.println("Sending event");
+                        URL url = new URL("http://10.0.0.10:8080/hyperperform-system-1.0-SNAPSHOT/rs/AccessEvent");
+                        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+
+                        connection.setRequestMethod("POST");
+                        connection.setRequestProperty("content-type", "application/json");
+
+                        connection.setDoOutput(true);
+                        DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+                        out.writeBytes(new String(buffer, 0, buffer.length));
+                        out.flush();
+                        out.close();
+
+                        System.out.println("Response code: " + connection.getResponseCode());
+                        System.out.println("Response message: " + connection.getResponseMessage());
                     }
                 }
 
@@ -80,6 +104,8 @@ public class Main
 //                        }
 //
 //                    }
+
+                System.out.println("Initialisation complete");
 
                 //---------------------------------------------------------------------------------------------
             }
