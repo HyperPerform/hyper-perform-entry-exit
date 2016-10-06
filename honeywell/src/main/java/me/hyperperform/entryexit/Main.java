@@ -37,6 +37,12 @@ public class Main
                         System.out.println("");
                         System.out.println("Card scanned event at " + new Date());
 
+                        String event = new String(buffer, 0, buffer.length);
+                        event += ", \"deviceID\": \"honeywell\"";
+                        event += ", \"day\": \"0\"";
+                        event += ", \"timestamp\": \"" + new Timestamp(new Date().getTime()).toString().replace(" ", "T") + "\"";
+                        event = "{" + event + "}";
+
                         System.out.println("Sending event");
                         URL url = new URL("http://localhost:8080/hyperperform-system-1.0-SNAPSHOT/rs/AccessEvent");
                         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
@@ -46,7 +52,7 @@ public class Main
 
                         connection.setDoOutput(true);
                         DataOutputStream out = new DataOutputStream(connection.getOutputStream());
-                        out.writeBytes(new String(buffer, 0, buffer.length));
+                        out.writeBytes(event);
                         out.flush();
                         out.close();
 
